@@ -1,5 +1,6 @@
 import type { Inputs, Strategy } from './calc';
 import type { Role } from './lead';
+import { REVIEW } from './service';
 
 export interface Link {
   tag: string;
@@ -25,7 +26,10 @@ export function nextSteps(i: Inputs, s: Strategy, role?: Role): Link[] {
     out.push({ tag: 'For providers', title: SITES.supportAudit.name, text: 'An independent check that your property and support evidence stands up before licensing.', href: SITES.supportAudit.href });
   }
   if (s === 'sh') {
-    out.push({ tag: 'Before you sign', title: 'Run the provider lease check', text: 'Twelve questions to put to any supported housing provider.', href: '/provider-check', internal: true });
+    out.push({ tag: 'Before you sign', title: 'Run the provider lease check', text: 'Twelve questions to put to any supported housing provider. Free.', href: '/provider-check', internal: true });
+    if (role !== 'provider') {
+      out.push({ tag: `Done for you · ${REVIEW.price}`, title: 'Provider review', text: 'We check the provider, their support evidence and the lease before you sign.', href: '/provider-review', internal: true });
+    }
     if (role !== 'provider') {
       out.push({ tag: 'For the provider', title: SITES.supportAudit.name, text: 'Point them here to evidence their support before licensing arrives.', href: SITES.supportAudit.href });
     }

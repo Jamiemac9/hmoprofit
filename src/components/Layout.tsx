@@ -165,6 +165,7 @@ function Footer() {
           <FooterCol title="Tools">
             <li><Link to="/check" className="hover:underline">Deal check</Link></li>
             <li><Link to="/provider-check" className="hover:underline">Provider lease check</Link></li>
+            <li><Link to="/provider-review" className="hover:underline">Provider review</Link></li>
             <li><a href="/guides/" className="hover:underline">Guides</a></li>
           </FooterCol>
           <FooterCol title="SEA network">

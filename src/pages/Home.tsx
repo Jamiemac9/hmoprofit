@@ -5,6 +5,7 @@ import { SceneHeadline, SceneLoad, SceneCompliant, MiniHmo, MiniSa, MiniSh } fro
 import { calcHmo, DEFAULT_INPUTS, gbp } from '../lib/calc';
 import { gsap, setupReveals, prefersReducedMotion } from '../lib/motion';
 import { usePageMeta } from '../lib/meta';
+import { REVIEW } from '../lib/service';
 
 function useReveals() {
   const ref = useRef<HTMLDivElement>(null);
@@ -263,7 +264,7 @@ function RuleDates() {
 const uses = [
   { t: 'Before you buy', d: 'Compare HMO, serviced and a provider lease on the same property before an offer goes in.', to: '/check' },
   { t: 'Already a landlord', d: 'Stress-test the houses you own against periodic tenancies, the register and the 2030 EPC deadline.', to: '/check' },
-  { t: 'Offered a provider lease', d: 'A supported housing provider wants a five-year lease. Check them before you sign.', to: '/provider-check' },
+  { t: 'Offered a provider lease', d: 'A supported housing provider wants a five-year lease. Check them yourself, or have us review them.', to: '/provider-review' },
   { t: 'Running a provider', d: 'Model a new scheme with licensing and repair costs in, not bolted on later.', to: '/check' },
   { t: 'Sourcing deals', d: 'Hand investors a report they can check line by line, not a yield claim.', to: '/check' },
 ];
@@ -297,6 +298,27 @@ const network = [
   { tag: 'For owners', name: 'Exempt Accommodation', d: 'Plain-English guides to exempt rent, provider leases and the new licensing regime.', href: 'https://exemptaccommodation.com' },
   { tag: 'EPC below C?', name: 'EPC Birmingham', d: 'Get a current assessment and know your upgrade bill before 2030 makes it urgent.', href: 'https://epcbirmingham.co.uk' },
 ];
+
+function ReviewBand() {
+  return (
+    <section className="wrap pt-36">
+      <div data-reveal className="ticks grid gap-10 overflow-hidden rounded-[8px] bg-signal p-8 sm:p-12 lg:grid-cols-[1.4fr_1fr] lg:items-end">
+        <div>
+          <p className="eyebrow text-white/85">Done for you · {REVIEW.price}</p>
+          <h2 className="display mt-4 text-[clamp(34px,4.6vw,64px)]">Offered a provider lease? We'll check the provider first.</h2>
+          <p className="mt-5 max-w-[620px] text-[17px] leading-relaxed text-white/90">
+            Who they are, whether their support stands up, whether they're ready for licensing, and what the lease leaves with you. Rated
+            red, amber or green, with a call to walk you through it.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3 lg:justify-end">
+          <Link to="/provider-review" className="btn btn-light">See the provider review</Link>
+          <Link to="/provider-check" className="btn btn-ghost !border-white/60">Free check first</Link>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function Network() {
   return (
@@ -364,6 +386,7 @@ export default function Home() {
       <Strategies />
       <RuleDates />
       <UseCases />
+      <ReviewBand />
       <Network />
       <Ethos />
     </div>

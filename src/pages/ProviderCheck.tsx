@@ -4,6 +4,7 @@ import { useStored } from '../lib/store';
 import LeadForm from '../components/LeadForm';
 import { readProfile, type LeadProfile } from '../lib/lead';
 import { SITES } from '../lib/network';
+import { REVIEW } from '../lib/service';
 import { setupReveals } from '../lib/motion';
 import { usePageMeta } from '../lib/meta';
 
@@ -146,6 +147,9 @@ export default function ProviderCheck() {
                   <li key={q.id} className="flex gap-2.5"><span className="mt-2 h-1.5 w-1.5 shrink-0 bg-warn" aria-hidden="true" />{q.ask}</li>
                 ))}
               </ul>
+              <Link to="/provider-review/documents" className="mt-4 inline-block text-[14px] font-medium underline underline-offset-4">
+                Copy our document request email →
+              </Link>
             </div>
           )}
           <div className="mt-4">
@@ -159,7 +163,8 @@ export default function ProviderCheck() {
                 <LeadForm
                   source="provider-check"
                   title="Stay ahead of licensing"
-                  text="Get supported housing licensing updates as the regulations firm up, and a call if you'd like a second pair of eyes on this provider."
+                  text="Get supported housing licensing updates as the regulations firm up."
+
                   button="Send me updates"
                   summary={{ provider_score: score, provider_answered: answered, provider_gaps: gaps.map((g) => g.id).join(' ') }}
                   onDone={setProfile}
@@ -168,6 +173,18 @@ export default function ProviderCheck() {
             )}
           </div>
           <div className="mt-4 grid gap-3">
+            <Link
+              to="/provider-review"
+              className={`block rounded-[8px] p-6 transition-transform hover:-translate-y-0.5 ${answered > 0 && score < 20 ? 'bg-white text-black' : 'border border-rule bg-panel'}`}
+            >
+              <span className={`eyebrow ${answered > 0 && score < 20 ? 'text-black/60' : 'text-mist'}`}>Done for you · {REVIEW.price}</span>
+              <span className="mt-2 block text-[24px] font-medium tracking-tight">Want us to check them?</span>
+              <span className={`mt-1 block text-[14px] leading-relaxed ${answered > 0 && score < 20 ? 'text-black/75' : 'text-white/75'}`}>
+                We review the provider's records, support evidence, licensing readiness and the lease, and give you a red, amber or green
+                rating before you sign.
+              </span>
+              <span className="mt-3 block text-[14px] font-medium underline underline-offset-4">See the provider review →</span>
+            </Link>
             <a href={SITES.supportAudit.href} className="ticks block rounded-[8px] bg-signal p-6 text-white transition-transform hover:-translate-y-0.5">
               <span className="eyebrow text-white/80">If you're the provider</span>
               <span className="mt-2 block text-[24px] font-medium tracking-tight">Support Audit</span>

@@ -50,3 +50,27 @@ describe('POST /api/lead', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
+
+describe('provider review requests', () => {
+  it('emails the inbox with the details, escaped, and still saves the lead', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 201 }));
+    const res = await onRequestPost({
+      request: req({ ...good, source: 'provider-review', summary: { provider_name: 'Acme <Support>', property_area: 'B29' } }),
+      env: { BREVO_API_KEY: 'k', NOTIFY_EMAIL: 'info@hmoprofit.co.uk', BREVO_SENDER_EMAIL: 'info@hmoprofit.co.uk' },
+    });
+    expect(res.status).toBe(200);
+    const urls = fetchMock.mock.calls.map((c) => String(c[0]));
+    expect(urls).toContain('https://api.brevo.com/v3/smtp/email');
+    expect(urls).toContain('https://api.brevo.com/v3/contacts');
+    const mail = JSON.parse(String(fetchMock.mock.calls.find((c) => String(c[0]).includes('smtp'))![1]?.body));
+    expect(mail.subject).toContain('Acme <Support>');
+    expect(mail.htmlContent).toContain('Acme &lt;Support&gt;');
+    expect(mail.replyTo.email).toBe('sam@example.com');
+  });
+
+  it('does not email the inbox for ordinary deal-check leads', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 201 }));
+    await onRequestPost({ request: req(good), env: { BREVO_API_KEY: 'k', NOTIFY_EMAIL: 'a@b.co', BREVO_SENDER_EMAIL: 'a@b.co' } });
+    expect(fetchMock.mock.calls.map((c) => String(c[0]))).not.toContain('https://api.brevo.com/v3/smtp/email');
+  });
+});

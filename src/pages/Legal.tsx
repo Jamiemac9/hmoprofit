@@ -31,6 +31,7 @@ export function Privacy() {
       <h2>2. What data we collect</h2>
       <ul>
         <li><strong>Identity and contact data:</strong> name, email address, phone number and which description fits you best (for example landlord or provider), submitted through the form that opens the full report or signs you up for updates.</li>
+        <li><strong>Provider review requests:</strong> the property's town or postcode, the provider's name, lease details and anything you tell us, plus the documents a provider shares with us for the review.</li>
         <li><strong>Calculator and checklist inputs:</strong> non-personal figures and answers you enter. These stay in your browser unless you submit them with your contact details, when we keep a short summary of your results.</li>
         <li><strong>Technical data:</strong> IP address, browser, device, operating system and pages visited, from standard server logs and (if you accept) analytics cookies.</li>
         <li><strong>Cookies and similar technologies:</strong> see section 8.</li>
@@ -41,6 +42,7 @@ export function Privacy() {
         <li>To send your results, follow up about them by email, and call you where it would help — consent (you tick the box before the report opens).</li>
         <li>To send related property content and offers — consent. Withdraw it at any time with the unsubscribe link in any email.</li>
         <li>To point you to related services in our network (Support Audit, Exempt Accommodation, EPC Birmingham) that match your results — consent.</li>
+        <li>To carry out a provider review you have asked for — performance of a contract. We ask providers to anonymise anything about residents and do not need resident personal data; if any is sent to us we delete it.</li>
         <li>To prevent spam and fraud — legitimate interests.</li>
         <li>To improve the Service, fix problems and produce anonymous statistics — legitimate interests.</li>
         <li>To meet legal, accounting and regulatory obligations — legal obligation.</li>
@@ -49,12 +51,15 @@ export function Privacy() {
       <ul>
         <li>Brevo (Sendinblue SAS, France) — to store your contact details and send transactional and marketing emails.</li>
         <li>Google Sheets / Google Workspace (Google Ireland Limited) — to log submissions for our internal records.</li>
+        <li>Stripe (Stripe Payments Europe Ltd, Ireland) — to take payment for a provider review, if you pay by card. We do not see or store your card details.</li>
         <li>Hosting and infrastructure providers — to serve the website and store logs.</li>
       </ul>
       <p>We do not sell your personal data. Where data is transferred outside the UK or EEA, we rely on adequacy decisions or Standard Contractual Clauses.</p>
       <h2>5. How long we keep your data</h2>
       <ul>
         <li>Lead and marketing data: while you remain subscribed, plus up to 24 months of inactivity, then deleted or anonymised.</li>
+        <li>Provider review reports and the documents behind them: 12 months from the report, then deleted, unless you ask us to keep them longer.</li>
+        <li>Invoices and accounting records for paid reviews: 6 years, as UK tax law requires.</li>
         <li>Server logs and analytics: up to 14 months.</li>
       </ul>
       <h2>6. Your rights under UK GDPR</h2>
@@ -86,7 +91,7 @@ export function Terms() {
       <h2>1. About us</h2>
       <p>The Service is operated from the United Kingdom by Apex Digital Enterprise ("we", "us", "our"). Contact: {MAIL}.</p>
       <h2>2. The Service</h2>
-      <p>The Service estimates the monthly profit of a UK property under three strategies (professional HMO, serviced accommodation, and a lease to a supported housing provider) after the compliance costs and allowances it models, based on the figures you enter. The Service is free. Headline results are shown straight away; the line-by-line breakdown, checklist and printable full report open after you submit your contact details.</p>
+      <p>The Service estimates the monthly profit of a UK property under three strategies (professional HMO, serviced accommodation, and a lease to a supported housing provider) after the compliance costs and allowances it models, based on the figures you enter. The calculator, the provider lease check and the full report are free. Headline results are shown straight away; the line-by-line breakdown, checklist and printable full report open after you submit your contact details. We also offer a paid provider review, covered in section 7.</p>
       <h2>3. No financial, tax or legal advice</h2>
       <p>All outputs are illustrative estimates based on your inputs and the model's assumptions. They are not financial, investment, tax, mortgage, planning or legal advice and should not be relied on for investment decisions. Get independent advice from a regulated adviser before any purchase, lease, mortgage or letting arrangement. We do not guarantee any returns, occupancy, rents or compliance outcomes. The provider lease check is general guidance, not a substitute for a solicitor's review.</p>
       <h2>4. Accuracy of information</h2>
@@ -95,24 +100,33 @@ export function Terms() {
       <p>You must be at least 18 and legally able to enter into a contract.</p>
       <h2>6. Contact details and consent</h2>
       <p>To open the full report you must provide your name, email address and a UK phone number. By submitting them you confirm they are correct and consent to us contacting you about your results and related services, in line with our <Link to="/privacy-policy">privacy policy</Link>. You can unsubscribe or ask us not to call at any time.</p>
-      <h2>7. Acceptable use</h2>
+      <h2>7. Provider reviews</h2>
+      <ul>
+        <li>A provider review is a paid service in which we review a supported housing provider for you before you sign a lease. Requesting one costs nothing; we agree the scope and fixed fee with you in writing before any work starts or any payment is due.</li>
+        <li>The review is based on public records and the documents and information the provider and you give us at the time. We do not verify every document independently, and we cannot guarantee a provider's future conduct, funding or compliance.</li>
+        <li>The report is an opinion from a property and compliance perspective. It is not legal, financial or investment advice and does not replace a solicitor's review of the lease.</li>
+        <li>If you are a consumer, you have 14 days from agreeing the scope to cancel under the Consumer Contracts Regulations 2013. If you ask us to start within that period and then cancel, you pay for work done up to cancellation. Once the report is delivered, the service is complete.</li>
+        <li>We take no referral fees from providers. If a provider we reviewed for you later asks us for a service, we will tell you first.</li>
+        <li>Our liability for a provider review is limited to the fee you paid for it.</li>
+      </ul>
+      <h2>8. Acceptable use</h2>
       <ul>
         <li>Do not use the Service unlawfully or fraudulently.</li>
         <li>Do not scrape, reverse-engineer or interfere with the Service.</li>
         <li>Do not resell reports or republish them commercially without our written permission.</li>
         <li>Do not upload malicious code or attempt unauthorised access.</li>
       </ul>
-      <h2>8. Intellectual property</h2>
+      <h2>9. Intellectual property</h2>
       <p>All content, calculations, layouts, branding and reports belong to us or our licensors. You receive a personal, non-transferable licence to use a report for your own property decisions.</p>
-      <h2>9. Limitation of liability</h2>
-      <p>To the extent the law allows, we are not liable for indirect or consequential loss, loss of profit or opportunity, or loss from relying on the estimates. The Service is free, and our total liability for any claim is limited to £100. Nothing limits liability for death or personal injury caused by negligence, fraud, or anything that cannot be excluded under UK law.</p>
-      <h2>10. Service availability</h2>
+      <h2>10. Limitation of liability</h2>
+      <p>To the extent the law allows, we are not liable for indirect or consequential loss, loss of profit or opportunity, or loss from relying on the estimates. For the free tools, our total liability for any claim is limited to £100; for a provider review, to the fee you paid. Nothing limits liability for death or personal injury caused by negligence, fraud, or anything that cannot be excluded under UK law.</p>
+      <h2>11. Service availability</h2>
       <p>We aim to keep the Service available but do not guarantee uninterrupted access, and may change or withdraw any part of it.</p>
-      <h2>11. Changes to these Terms</h2>
+      <h2>12. Changes to these Terms</h2>
       <p>We may update these Terms. The date at the top shows the latest version. Continued use after changes means you accept them.</p>
-      <h2>12. Governing law</h2>
+      <h2>13. Governing law</h2>
       <p>These Terms are governed by the laws of England and Wales, and the courts of England and Wales have exclusive jurisdiction.</p>
-      <h2>13. Contact</h2>
+      <h2>14. Contact</h2>
       <p>Questions about these Terms? Email {MAIL}.</p>
     </Doc>
   );

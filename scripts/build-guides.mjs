@@ -81,7 +81,7 @@ ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script
 </nav></div>
 <main id="main" class="wrap">${body}</main>
 <footer><div class="wrap">
-<nav aria-label="Footer"><a href="/check">Deal check</a><a href="/provider-check">Provider check</a><a href="/guides/">Guides</a><a href="/privacy-policy">Privacy policy</a><a href="/terms">Terms of use</a><a href="mailto:info@hmoprofit.co.uk">info@hmoprofit.co.uk</a></nav>
+<nav aria-label="Footer"><a href="/check">Deal check</a><a href="/provider-check">Provider check</a><a href="/provider-review">Provider review</a><a href="/guides/">Guides</a><a href="/privacy-policy">Privacy policy</a><a href="/terms">Terms of use</a><a href="mailto:info@hmoprofit.co.uk">info@hmoprofit.co.uk</a></nav>
 <p>Figures are illustrative and not financial, investment, tax or legal advice. © ${new Date().getFullYear()} Apex Digital Enterprise.</p>
 </div></footer>
 </body>
@@ -132,7 +132,7 @@ const index = `
 <aside class="box"><h2>Check a deal</h2><p>Compare HMO, serviced accommodation and a provider lease on compliant profit.</p><a class="btn" href="/check">Open the deal check</a></aside>`;
 writeFileSync(join(OUT, 'index.html'), page({ title: 'HMO guides for UK landlords | HMO Profit', description: 'Plain-English guides on the costs and rules that decide whether an HMO pays. Every fact is sourced.', canonical: `${SITE}/guides/`, body: index }));
 
-const urls = ['/', '/check', '/provider-check', '/guides/', ...guides.map((g) => `/guides/${g.slug}`), '/privacy-policy', '/terms'];
+const urls = ['/', '/check', '/provider-check', '/provider-review', '/provider-review/documents', '/guides/', ...guides.map((g) => `/guides/${g.slug}`), '/privacy-policy', '/terms'];
 writeFileSync(
   join(ROOT, 'dist/sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${SITE}${u}</loc></url>`).join('\n')}\n</urlset>\n`,

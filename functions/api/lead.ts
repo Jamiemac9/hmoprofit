@@ -7,6 +7,10 @@ interface Env {
   BREVO_API_KEY?: string;
   BREVO_LIST_ID?: string;
   SHEETS_WEBHOOK_URL?: string;
+  /** Where provider review requests are emailed, e.g. info@hmoprofit.co.uk */
+  NOTIFY_EMAIL?: string;
+  /** A sender verified in Brevo, e.g. info@hmoprofit.co.uk */
+  BREVO_SENDER_EMAIL?: string;
 }
 
 interface Body {
@@ -23,6 +27,7 @@ interface Body {
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json' } });
 
+const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const ROLES = ['investor', 'landlord', 'provider', 'sourcer', 'other'];
 
@@ -49,7 +54,8 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
   if (!EMAIL.test(email)) return json({ error: 'Please enter a valid email address.' }, 400);
   if (!phone) return json({ error: 'Please enter a UK phone number.' }, 400);
   if (body.consent !== true) return json({ error: 'Please tick the consent box.' }, 400);
-  const source = body.source === 'provider-check' ? 'provider-check' : 'deal-check';
+  const SOURCES = ['deal-check', 'provider-check', 'provider-review'];
+  const source = SOURCES.includes(body.source ?? '') ? (body.source as string) : 'deal-check';
 
   const tasks: Promise<Response>[] = [];
   if (env.BREVO_API_KEY) {
@@ -81,6 +87,25 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
         body: JSON.stringify({ at: new Date().toISOString(), name, email, phone, role, source, ...(body.summary ?? {}) }),
       }),
     );
+  }
+
+  // A provider review request is a sales enquiry: email it straight to the inbox as well.
+  // Sent separately so a failed notification never loses the lead.
+  if (source === 'provider-review' && env.BREVO_API_KEY && env.NOTIFY_EMAIL && env.BREVO_SENDER_EMAIL) {
+    const rows = Object.entries({ name, email, phone, role, ...(body.summary ?? {}) })
+      .map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;color:#555">${esc(k)}</td><td style="padding:4px 0">${esc(String(v ?? ''))}</td></tr>`)
+      .join('');
+    await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': env.BREVO_API_KEY, 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({
+        sender: { email: env.BREVO_SENDER_EMAIL, name: 'HMO Profit' },
+        to: [{ email: env.NOTIFY_EMAIL }],
+        replyTo: { email, name },
+        subject: `Provider review request: ${String(body.summary?.provider_name ?? 'unnamed provider').slice(0, 80)} (${name})`,
+        htmlContent: `<p>New provider review request from hmoprofit.co.uk. Call back to agree scope and fee.</p><table>${rows}</table>`,
+      }),
+    }).catch(() => undefined);
   }
 
   const results = await Promise.allSettled(tasks);

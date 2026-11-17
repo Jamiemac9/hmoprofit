@@ -28,6 +28,7 @@ npm run build      # app + static guides + sitemap into dist/
 3. Environment variables (Production):
    - `BREVO_API_KEY`, `BREVO_LIST_ID` – where leads go
    - `SHEETS_WEBHOOK_URL` – optional, e.g. a Google Apps Script web app that appends a row
+   - `NOTIFY_EMAIL`, `BREVO_SENDER_EMAIL` – provider review requests are emailed here from a sender verified in Brevo
 4. In Brevo, add two text contact attributes, `ROLE` and `SOURCE`. Without them the lead is still saved, but with name only (phone and role still reach the Sheets webhook).
 5. Add the custom domain `hmoprofit.co.uk` in Pages and switch DNS from the old host once you're happy.
 
@@ -43,6 +44,8 @@ npm run build      # app + static guides + sitemap into dist/
 | `src/pages/Report.tsx` | Free full report (print / save as PDF), opened by lead capture |
 | `src/components/LeadForm.tsx` | Name, email, phone, role form used on the deal check and provider check |
 | `src/lib/network.ts` | SEA network links and next-step routing |
+| `src/pages/ProviderReview.tsx` | Paid provider review page and request form |
+| `src/lib/service.ts` | Provider review price, scope and document list |
 | `src/components/Fields.tsx` | Hero tick field and bar field canvases |
 | `src/components/Iso.tsx` | Isometric line-art illustrations |
 | `content/guides/` | One Markdown file per guide |
@@ -52,6 +55,15 @@ npm run build      # app + static guides + sitemap into dist/
 Create `content/guides/<slug>.md` with front matter (`title`, `description`, `published`, optional `seoTitle`, `kicker`, `updated`, `image`) and Markdown body. It is published at `/guides/<slug>` on the next build and added to the guides index and sitemap.
 
 Images go in `public/guides/`. The existing guide expects `public/guides/register-your-rental-property-hmo.jpg`; copy it across from the old site.
+
+## Provider review (paid service)
+
+`/provider-review` sells a done-for-you check of a supported housing provider before a landlord signs their lease. `/provider-review/documents` is the document request a landlord sends the provider (copy, email or print).
+
+- Price, turnaround, call length and call-back promise live in `src/lib/service.ts`, along with the four review areas and the document list.
+- Requests are free and go to `/api/lead` with source `provider-review`: saved to Brevo and Sheets like other leads, and emailed to `NOTIFY_EMAIL` with reply-to set to the landlord.
+- No payment on the site. Agree scope on the call, then invoice or send a Stripe Payment Link.
+- Linked from the provider check (prominent when the score is under 20), the deal check and report for the provider-lease strategy, the homepage and the footer.
 
 ## Notes
 

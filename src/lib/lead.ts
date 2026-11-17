@@ -14,7 +14,7 @@ export interface LeadPayload {
   phone: string;
   role: Role;
   consent: boolean;
-  source: 'deal-check' | 'provider-check';
+  source: 'deal-check' | 'provider-check' | 'provider-review';
   summary?: Record<string, string | number>;
   company?: string; // honeypot
 }
