@@ -35,7 +35,7 @@ Environment variables (Netlify → Project configuration → Environment variabl
 | `BREVO_SENDER_EMAIL` | `info@hmoprofit.co.uk` (domain is authenticated in Brevo) | No |
 | `SHEETS_WEBHOOK_URL` | Optional: Google Apps Script web app URL | No |
 
-Brevo needs the contact fields `ROLE`, `SOURCE` and `CHANNEL` (text). If either is missing, or a phone number already belongs to another contact, the function retries without the phone, then with name only, so a lead is never lost.
+Brevo needs the contact fields `ROLE`, `SOURCE`, `CHANNEL` and `PHONE` (text). `SMS` is also set, but Brevo refuses it when the number is already on another contact, so `PHONE` is the field that always holds the number. If either is missing, or a phone number already belongs to another contact, the function retries without the phone, then with name only, so a lead is never lost.
 
 Change an env var → redeploy for functions to pick it up.
 

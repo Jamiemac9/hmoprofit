@@ -91,8 +91,9 @@ export async function handleLead(request: Request, env: Env): Promise<Response> 
     // already on another contact), retry without the phone, then with the name only.
     const base = { FIRSTNAME: first, LASTNAME: rest.join(' ') };
     const attempts = [
-      { ...base, SMS: phone, ROLE: role, SOURCE: `hmoprofit-${source}`, CHANNEL: channel },
-      { ...base, ROLE: role, SOURCE: `hmoprofit-${source}`, CHANNEL: channel },
+      // SMS must be unique in Brevo (and valid), so it can be refused; PHONE is plain text and always kept.
+      { ...base, SMS: phone, PHONE: phone, ROLE: role, SOURCE: `hmoprofit-${source}`, CHANNEL: channel },
+      { ...base, PHONE: phone, ROLE: role, SOURCE: `hmoprofit-${source}`, CHANNEL: channel },
       base,
     ];
     tasks.push(

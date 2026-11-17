@@ -29,7 +29,7 @@ describe('POST /api/lead', () => {
     const res = await onRequestPost({ request: req(good), env: { BREVO_API_KEY: 'k', BREVO_LIST_ID: '7' } });
     expect(res.status).toBe(200);
     const sent = JSON.parse(String(fetchMock.mock.calls[0][1]?.body));
-    expect(sent.attributes).toMatchObject({ FIRSTNAME: 'Sam', LASTNAME: 'Patel', SMS: '+447700900123', ROLE: 'landlord', SOURCE: 'hmoprofit-deal-check', CHANNEL: 'direct' });
+    expect(sent.attributes).toMatchObject({ FIRSTNAME: 'Sam', LASTNAME: 'Patel', SMS: '+447700900123', PHONE: '+447700900123', ROLE: 'landlord', SOURCE: 'hmoprofit-deal-check', CHANNEL: 'direct' });
     expect(sent.listIds).toEqual([7]);
   });
 
@@ -43,6 +43,7 @@ describe('POST /api/lead', () => {
     expect(res.status).toBe(200);
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(JSON.parse(String(fetchMock.mock.calls[1][1]?.body)).attributes.SMS).toBeUndefined();
+    expect(JSON.parse(String(fetchMock.mock.calls[1][1]?.body)).attributes.PHONE).toBe('+447700900123');
     expect(JSON.parse(String(fetchMock.mock.calls[2][1]?.body)).attributes).toEqual({ FIRSTNAME: 'Sam', LASTNAME: 'Patel' });
   });
 
