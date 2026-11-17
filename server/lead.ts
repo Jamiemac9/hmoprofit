@@ -135,12 +135,24 @@ export async function handleLead(request: Request, env: Env): Promise<Response> 
   const results = await Promise.allSettled(tasks);
   const failed = results.filter((r) => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.ok && r.value.status !== 204));
   // Log why a destination refused (status and Brevo's message, never the key or the lead's details).
+  const reasons: string[] = [];
   for (const r of failed) {
-    if (r.status === 'rejected') console.error('lead: destination unreachable', String(r.reason).slice(0, 200));
-    else console.error('lead: destination refused', r.value.status, (await r.value.text().catch(() => '')).slice(0, 300));
+    if (r.status === 'rejected') reasons.push(`unreachable: ${String(r.reason).slice(0, 120)}`);
+    else {
+      // Brevo's error code only (e.g. "unauthorized"), never its message text, which can echo details.
+      const body = (await r.value.text().catch(() => '')).slice(0, 300);
+      let code = '';
+      try {
+        code = String(JSON.parse(body).code ?? '');
+      } catch {
+        code = '';
+      }
+      reasons.push(`${r.value.status}${code ? ` ${code}` : ''}`);
+      console.error('lead: destination refused', r.value.status, body);
+    }
   }
   if (tasks.length > 0 && failed.length === tasks.length) {
-    return json({ error: 'We could not save your details just now. Please try again.' }, 502);
+    return json({ error: 'We could not save your details just now. Please try again.', reasons }, 502);
   }
   return json({ ok: true });
 }
