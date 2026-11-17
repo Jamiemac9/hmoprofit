@@ -134,6 +134,11 @@ export async function handleLead(request: Request, env: Env): Promise<Response> 
 
   const results = await Promise.allSettled(tasks);
   const failed = results.filter((r) => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.ok && r.value.status !== 204));
+  // Log why a destination refused (status and Brevo's message, never the key or the lead's details).
+  for (const r of failed) {
+    if (r.status === 'rejected') console.error('lead: destination unreachable', String(r.reason).slice(0, 200));
+    else console.error('lead: destination refused', r.value.status, (await r.value.text().catch(() => '')).slice(0, 300));
+  }
   if (tasks.length > 0 && failed.length === tasks.length) {
     return json({ error: 'We could not save your details just now. Please try again.' }, 502);
   }
