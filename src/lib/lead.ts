@@ -1,3 +1,10 @@
+import { readAttribution } from './attribution';
+
+function attributionFields() {
+  const a = readAttribution();
+  return { channel: a.channel, campaign: a.campaign ?? '', landing: a.landing };
+}
+
 export type Role = 'investor' | 'landlord' | 'provider' | 'sourcer' | 'other';
 
 export const ROLES: { value: Role; label: string }[] = [
@@ -14,7 +21,7 @@ export interface LeadPayload {
   phone: string;
   role: Role;
   consent: boolean;
-  source: 'deal-check' | 'provider-check' | 'provider-review';
+  source: 'deal-check' | 'provider-check' | 'provider-review' | 'guide';
   summary?: Record<string, string | number>;
   company?: string; // honeypot
 }
@@ -28,7 +35,7 @@ export async function submitLead(payload: LeadPayload): Promise<{ ok: boolean; e
     const res = await fetch('/api/lead', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ ...payload, ...attributionFields() }),
     });
     if (res.ok) return { ok: true };
     const data = (await res.json().catch(() => ({}))) as { error?: string };

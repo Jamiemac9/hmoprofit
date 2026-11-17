@@ -20,6 +20,9 @@ interface Body {
   email?: string;
   phone?: string;
   role?: string;
+  channel?: string;
+  campaign?: string;
+  landing?: string;
   consent?: boolean;
   source?: string;
   summary?: Record<string, unknown>;
@@ -57,7 +60,11 @@ export async function handleLead(request: Request, env: Env): Promise<Response> 
   if (!EMAIL.test(email)) return json({ error: 'Please enter a valid email address.' }, 400);
   if (!phone) return json({ error: 'Please enter a UK phone number.' }, 400);
   if (body.consent !== true) return json({ error: 'Please tick the consent box.' }, 400);
-  const SOURCES = ['deal-check', 'provider-check', 'provider-review'];
+  const SOURCES = ['deal-check', 'provider-check', 'provider-review', 'guide'];
+  const tag = (v: unknown, max: number) => String(v ?? '').toLowerCase().replace(/[^a-z0-9/_-]/g, '').slice(0, max);
+  const channel = tag(body.channel, 30) || 'direct';
+  const campaign = tag(body.campaign, 60);
+  const landing = tag(body.landing, 120);
   const source = SOURCES.includes(body.source ?? '') ? (body.source as string) : 'deal-check';
 
   // Never accept a lead with nowhere to put it: fail loudly so the visitor can email instead.
@@ -84,8 +91,8 @@ export async function handleLead(request: Request, env: Env): Promise<Response> 
     // already on another contact), retry without the phone, then with the name only.
     const base = { FIRSTNAME: first, LASTNAME: rest.join(' ') };
     const attempts = [
-      { ...base, SMS: phone, ROLE: role, SOURCE: `hmoprofit-${source}` },
-      { ...base, ROLE: role, SOURCE: `hmoprofit-${source}` },
+      { ...base, SMS: phone, ROLE: role, SOURCE: `hmoprofit-${source}`, CHANNEL: channel },
+      { ...base, ROLE: role, SOURCE: `hmoprofit-${source}`, CHANNEL: channel },
       base,
     ];
     tasks.push(
@@ -101,7 +108,7 @@ export async function handleLead(request: Request, env: Env): Promise<Response> 
       fetch(env.SHEETS_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ at: new Date().toISOString(), name, email, phone, role, source, ...(body.summary ?? {}) }),
+        body: JSON.stringify({ at: new Date().toISOString(), name, email, phone, role, source, channel, campaign, landing, ...(body.summary ?? {}) }),
       }),
     );
   }
@@ -109,7 +116,7 @@ export async function handleLead(request: Request, env: Env): Promise<Response> 
   // A provider review request is a sales enquiry: email it straight to the inbox as well.
   // Sent separately so a failed notification never loses the lead.
   if (source === 'provider-review' && env.BREVO_API_KEY && env.NOTIFY_EMAIL && env.BREVO_SENDER_EMAIL) {
-    const rows = Object.entries({ name, email, phone, role, ...(body.summary ?? {}) })
+    const rows = Object.entries({ name, email, phone, role, channel, campaign, landing, ...(body.summary ?? {}) })
       .map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;color:#555">${esc(k)}</td><td style="padding:4px 0">${esc(String(v ?? ''))}</td></tr>`)
       .join('');
     await fetch('https://api.brevo.com/v3/smtp/email', {

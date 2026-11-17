@@ -1,5 +1,5 @@
 /**
- * HMO Profit — compliance-adjusted viability maths.
+ * HMO Profit: compliance-adjusted viability maths.
  *
  * Every strategy returns three figures:
  *   headline   – what a typical "rent minus mortgage" calculator shows

@@ -38,21 +38,21 @@ export function Privacy() {
       </ul>
       <h2>3. How we use your data and the legal basis</h2>
       <ul>
-        <li>To provide the Service and show your results — performance of a contract / your request.</li>
-        <li>To send your results, follow up about them by email, and call you where it would help — consent (you tick the box before the report opens).</li>
-        <li>To send related property content and offers — consent. Withdraw it at any time with the unsubscribe link in any email.</li>
-        <li>To point you to related services in our network (Support Audit, Exempt Accommodation, EPC Birmingham) that match your results — consent.</li>
-        <li>To carry out a provider review you have asked for — performance of a contract. We ask providers to anonymise anything about residents and do not need resident personal data; if any is sent to us we delete it.</li>
-        <li>To prevent spam and fraud — legitimate interests.</li>
-        <li>To improve the Service, fix problems and produce anonymous statistics — legitimate interests.</li>
-        <li>To meet legal, accounting and regulatory obligations — legal obligation.</li>
+        <li>To provide the Service and show your results: performance of a contract / your request.</li>
+        <li>To send your results, follow up about them by email, and call you where it would help: consent (you tick the box before the report opens).</li>
+        <li>To send related property content and offers: consent. Withdraw it at any time with the unsubscribe link in any email.</li>
+        <li>To point you to related services in our network (Support Audit, Exempt Accommodation, EPC Birmingham) that match your results: consent.</li>
+        <li>To carry out a provider review you have asked for: performance of a contract. We ask providers to anonymise anything about residents and do not need resident personal data; if any is sent to us we delete it.</li>
+        <li>To prevent spam and fraud: legitimate interests.</li>
+        <li>To improve the Service, fix problems and produce anonymous statistics: legitimate interests.</li>
+        <li>To meet legal, accounting and regulatory obligations: legal obligation.</li>
       </ul>
       <h2>4. Who we share your data with</h2>
       <ul>
-        <li>Brevo (Sendinblue SAS, France) — to store your contact details and send transactional and marketing emails.</li>
-        <li>Google Sheets / Google Workspace (Google Ireland Limited) — to log submissions for our internal records.</li>
-        <li>Stripe (Stripe Payments Europe Ltd, Ireland) — to take payment for a provider review, if you pay by card. We do not see or store your card details.</li>
-        <li>Hosting and infrastructure providers — to serve the website and store logs.</li>
+        <li>Brevo (Sendinblue SAS, France): to store your contact details and send transactional and marketing emails.</li>
+        <li>Google Sheets / Google Workspace (Google Ireland Limited): to log submissions for our internal records.</li>
+        <li>Stripe (Stripe Payments Europe Ltd, Ireland): to take payment for a provider review, if you pay by card. We do not see or store your card details.</li>
+        <li>Hosting and infrastructure providers: to serve the website and store logs.</li>
       </ul>
       <p>We do not sell your personal data. Where data is transferred outside the UK or EEA, we rely on adequacy decisions or Standard Contractual Clauses.</p>
       <h2>5. How long we keep your data</h2>

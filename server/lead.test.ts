@@ -29,7 +29,7 @@ describe('POST /api/lead', () => {
     const res = await onRequestPost({ request: req(good), env: { BREVO_API_KEY: 'k', BREVO_LIST_ID: '7' } });
     expect(res.status).toBe(200);
     const sent = JSON.parse(String(fetchMock.mock.calls[0][1]?.body));
-    expect(sent.attributes).toMatchObject({ FIRSTNAME: 'Sam', LASTNAME: 'Patel', SMS: '+447700900123', ROLE: 'landlord', SOURCE: 'hmoprofit-deal-check' });
+    expect(sent.attributes).toMatchObject({ FIRSTNAME: 'Sam', LASTNAME: 'Patel', SMS: '+447700900123', ROLE: 'landlord', SOURCE: 'hmoprofit-deal-check', CHANNEL: 'direct' });
     expect(sent.listIds).toEqual([7]);
   });
 
@@ -62,6 +62,20 @@ describe('POST /api/lead', () => {
     const res = await onRequestPost({ request: req({ ...good, company: 'spam' }), env: { BREVO_API_KEY: 'k' } });
     expect(res.status).toBe(200);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('attribution', () => {
+  it('passes a cleaned channel and campaign through to Brevo and Sheets', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 201 }));
+    await onRequestPost({
+      request: req({ ...good, source: 'guide', channel: 'LinkedIn<script>', campaign: 'provider-lease', landing: '/guides/x' }),
+      env: { BREVO_API_KEY: 'k', SHEETS_WEBHOOK_URL: 'https://hook' },
+    });
+    const brevo = JSON.parse(String(fetchMock.mock.calls.find((c) => String(c[0]).includes('brevo'))![1]?.body));
+    expect(brevo.attributes).toMatchObject({ CHANNEL: 'linkedinscript', SOURCE: 'hmoprofit-guide' });
+    const sheet = JSON.parse(String(fetchMock.mock.calls.find((c) => String(c[0]) === 'https://hook')![1]?.body));
+    expect(sheet).toMatchObject({ channel: 'linkedinscript', campaign: 'provider-lease', landing: '/guides/x', source: 'guide' });
   });
 });
 

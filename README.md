@@ -35,7 +35,7 @@ Environment variables (Netlify → Project configuration → Environment variabl
 | `BREVO_SENDER_EMAIL` | `info@hmoprofit.co.uk` (domain is authenticated in Brevo) | No |
 | `SHEETS_WEBHOOK_URL` | Optional: Google Apps Script web app URL | No |
 
-Brevo needs the contact fields `ROLE` and `SOURCE` (text). If either is missing, or a phone number already belongs to another contact, the function retries without the phone, then with name only, so a lead is never lost.
+Brevo needs the contact fields `ROLE`, `SOURCE` and `CHANNEL` (text). If either is missing, or a phone number already belongs to another contact, the function retries without the phone, then with name only, so a lead is never lost.
 
 Change an env var → redeploy for functions to pick it up.
 
@@ -75,6 +75,16 @@ Images go in `public/guides/`. The existing guide expects `public/guides/registe
 - Requests are free and go to `/api/lead` with source `provider-review`: saved to Brevo and Sheets like other leads, and emailed to `NOTIFY_EMAIL` with reply-to set to the landlord.
 - No payment on the site. Agree scope on the call, then invoice or send a Stripe Payment Link.
 - Linked from the provider check (prominent when the score is under 20), the deal check and report for the provider-lease strategy, the homepage and the footer.
+
+## Where leads come from
+
+Every lead carries `SOURCE` (which form: `hmoprofit-deal-check`, `-provider-check`, `-provider-review`, `-guide`) and `CHANNEL` (where the visitor first came from). Channel is first-touch, kept in the browser:
+
+- `utm_source` if the link has one (use `?utm_source=linkedin&utm_medium=social&utm_campaign=<post>` on every LinkedIn link)
+- otherwise the referrer: `linkedin`, `search` (or `blog-search` if they landed on a guide), `email`, `referral`
+- otherwise `blog` if they landed on a guide, else `direct`
+
+Campaign and landing page go to the Sheets webhook and the provider review email. Every guide page has a lead form (name, email, UK phone, role) tagged `hmoprofit-guide`.
 
 ## Notes
 

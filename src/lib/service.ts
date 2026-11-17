@@ -1,5 +1,5 @@
 /**
- * Provider review — the paid, done-for-you check of a supported housing provider
+ * Provider review: the paid, done-for-you check of a supported housing provider
  * before a landlord signs their lease. Change price, turnaround and wording here.
  */
 export const REVIEW = {

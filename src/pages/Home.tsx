@@ -32,8 +32,8 @@ function Hero() {
           Compliant profit, not headline yield.
         </h1>
         <p data-hero-in className="mx-auto mt-6 max-w-[620px] text-[clamp(16px,1.6vw,19px)] leading-relaxed text-white/80">
-          Run a property through the rules that decide the deal — licensing, Article 4, the Renters' Rights Act, the landlord
-          register, EPC C by 2030 and supported housing licensing — and see what's left.
+          Run a property through the rules that decide the deal: licensing, Article 4, the Renters' Rights Act, the landlord
+          register, EPC C by 2030 and supported housing licensing. Then see what's left.
         </p>
         <div data-hero-in className="mt-9 flex flex-wrap justify-center gap-3">
           <Link to="/check" className="btn btn-signal">Check a deal</Link>
@@ -56,7 +56,7 @@ function PinnedStory() {
     {
       label: 'Compliance load',
       value: `${gbp(-r.load)}/mo`,
-      text: 'Licensing, the landlord register, voids under periodic tenancies, maintenance and the EPC C upgrade — each costed per month.',
+      text: 'Licensing, the landlord register, voids under periodic tenancies, maintenance and the EPC C upgrade, each costed per month.',
       Art: SceneLoad,
     },
     {
@@ -361,7 +361,7 @@ function Ethos() {
           Built by someone who's had to pass the inspection
         </h2>
         <p className="mx-auto mt-6 max-w-[620px] text-[17px] leading-relaxed text-white/80" data-reveal>
-          HMO Profit is built by Jamie Mac: eight years in property and compliance — HMOs, social and supported property — and ten in
+          HMO Profit is built by Jamie Mac: eight years in property and compliance across HMOs, social and supported property, and ten in
           tech. It asks what a council officer or auditor would ask, because that's where deals fall over.
         </p>
         <div className="mt-9 flex flex-wrap justify-center gap-3" data-reveal>

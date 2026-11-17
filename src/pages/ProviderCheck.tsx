@@ -81,7 +81,7 @@ export default function ProviderCheck() {
         </h1>
         <p className="mt-6 max-w-[680px] text-[18px] leading-relaxed text-white/80" data-reveal>
           In exempt accommodation your rent comes from Housing Benefit paid to the provider. If their support doesn't stand up, the
-          money behind your lease can stop — and local licensing is on its way.
+          money behind your lease can stop, and local licensing is on its way.
         </p>
       </section>
 

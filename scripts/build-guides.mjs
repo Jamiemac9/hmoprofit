@@ -47,9 +47,55 @@ h1{font-size:clamp(38px,6vw,64px);line-height:1;letter-spacing:-.035em;font-weig
 .list li{border-bottom:1px solid var(--rule)}.list a{display:block;padding:26px 4px;text-decoration:none}
 .list a:hover{background:var(--panel)}.list strong{display:block;font-size:22px;font-weight:500;letter-spacing:-.015em}
 .list span{display:block;color:rgba(255,255,255,.72);margin-top:6px;font-size:15px}.list time{font-size:13px;color:var(--mist)}
+
+.lead{margin:40px 0 0;padding:28px;border:1px solid var(--rule);border-radius:8px;background:var(--panel)}
+.lead h2{margin:0 0 6px;font-size:24px;letter-spacing:-.02em;font-weight:560}.lead p{margin:0 0 18px;color:rgba(255,255,255,.78);font-size:15px}
+.lead .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.lead label{display:block;font-size:14px;font-weight:500;margin-bottom:6px}
+.lead input,.lead select{width:100%;min-height:48px;padding:0 14px;border-radius:6px;background:#1b1e21;border:1px solid var(--rule);color:#fff;font:inherit;box-sizing:border-box}
+.lead input:focus,.lead select:focus{border-color:var(--signal);outline:none}
+.lead .consent{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,.8);margin-top:14px}
+.lead .consent input{width:16px;min-height:16px;margin-top:3px;accent-color:#1e6ef3}
+.lead button{margin-top:16px;min-height:46px;padding:0 22px;border:0;border-radius:6px;background:var(--signal);color:#fff;font:inherit;font-weight:500;cursor:pointer}
+.lead .msg{margin-top:12px;font-size:14px}.lead .err{color:#ff7a45}.hp{position:absolute;left:-9999px}
 footer{margin-top:120px;background:var(--signal);padding:48px 0 32px;font-size:14px}
 footer nav{display:flex;gap:20px;flex-wrap:wrap}footer p{color:rgba(255,255,255,.85);max-width:560px}
 `;
+
+// Same rules as src/lib/attribution.ts: first touch wins.
+const ATTR_JS = `(function(){try{if(localStorage.getItem('hp-attr'))return;var u=new URL(location.href),r=document.referrer,h='';try{h=r?new URL(r).hostname:''}catch(e){}
+var s=u.searchParams.get('utm_source'),c;if(s){c=s.toLowerCase().replace(/[^a-z0-9-]/g,'').slice(0,30)||'direct'}
+else if(/linkedin\\.|lnkd\\.in/.test(h))c='linkedin';else if(/google\\.|bing\\.|duckduckgo\\.|yahoo\\.|ecosia\\./.test(h))c='blog-search';
+else if(/mail\\.|outlook\\.|brevo|sendibt/.test(h))c='email';else c='blog';
+localStorage.setItem('hp-attr',JSON.stringify({channel:c,campaign:(u.searchParams.get('utm_campaign')||'').slice(0,60)||undefined,landing:u.pathname.slice(0,120)}))}catch(e){}})();`;
+
+const FORM_JS = `(function(){var f=document.getElementById('lead');if(!f)return;var m=f.querySelector('.msg');
+f.addEventListener('submit',async function(e){e.preventDefault();var d=new FormData(f),g=function(k){return String(d.get(k)||'').trim()};
+if(!/^(?:\\+44\\s?|0)(?:\\d\\s?-?){9,10}$/.test(g('phone'))){m.className='msg err';m.textContent='Please enter a UK phone number, for example 07700 900123.';return}
+var a={};try{a=JSON.parse(localStorage.getItem('hp-attr')||'{}')}catch(x){}
+var b=f.querySelector('button');b.disabled=true;b.textContent='Sending…';
+try{var r=await fetch('/api/lead',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:g('name'),email:g('email'),phone:g('phone'),role:g('role')||'other',consent:d.get('consent')==='on',company:g('company'),source:'guide',summary:{guide:f.dataset.slug},channel:a.channel||'blog',campaign:a.campaign||'',landing:a.landing||location.pathname})});
+var j={};try{j=await r.json()}catch(x){}
+if(r.ok){f.innerHTML='<h2>Thanks, '+(g('name').split(' ')[0]||'')+'.</h2><p>You will get new guides and supported housing licensing updates as the rules firm up.</p><p><a href="/check">Check a deal now</a> or <a href="/provider-check">check a provider</a>.</p>'}
+else{m.className='msg err';m.textContent=j.error||'Something went wrong. Please try again.';b.disabled=false;b.textContent='Send me updates'}}
+catch(x){m.className='msg err';m.textContent='Network problem. Please try again.';b.disabled=false;b.textContent='Send me updates'}})})();`;
+
+function leadForm(slug) {
+  return `<form id="lead" class="lead" data-slug="${esc(slug)}">
+<h2>Get the next guide, and licensing updates</h2>
+<p>New guides on the costs and rules that decide whether a property pays, and supported housing licensing news as the regulations firm up.</p>
+<div class="grid">
+<div><label for="l-name">Name</label><input id="l-name" name="name" required autocomplete="name"></div>
+<div><label for="l-email">Email</label><input id="l-email" name="email" type="email" required autocomplete="email"></div>
+<div><label for="l-phone">Phone</label><input id="l-phone" name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="07700 900123"></div>
+<div><label for="l-role">Which fits you best?</label><select id="l-role" name="role" required><option value="" disabled selected>Choose one</option><option value="investor">Buying my next property</option><option value="landlord">Landlord with properties now</option><option value="provider">Supported housing provider</option><option value="sourcer">Deal sourcer or agent</option><option value="other">Something else</option></select></div>
+</div>
+<div class="hp" aria-hidden="true"><label for="l-company">Company</label><input id="l-company" name="company" tabindex="-1" autocomplete="off"></div>
+<label class="consent"><input type="checkbox" name="consent" required><span>Email me new guides and related property updates, and call me if it would help. Unsubscribe any time. See the <a href="/privacy-policy">privacy policy</a>.</span></label>
+<button type="submit">Send me updates</button>
+<p class="msg" role="alert" aria-live="polite"></p>
+</form>`;
+}
 
 const LOGO = `<svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#1E6EF3"/><path d="M7 15 16 8l9 7v10H7z" fill="none" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/><path d="M13 25v-6h6v6" fill="none" stroke="#fff" stroke-width="2.4"/></svg>`;
 
@@ -70,6 +116,7 @@ ${image ? `<meta property="og:image" content="${SITE}${image}"><meta name="twitt
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>${CSS}</style>
+<script>${ATTR_JS}</script>
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script>` : ''}
 </head>
 <body>
@@ -106,7 +153,11 @@ ${g.kicker ? `<p class="kicker">${esc(g.kicker)}</p>` : ''}
 <h1>${esc(g.title)}</h1>
 <p class="meta">HMO Profit · Published <time datetime="${iso(g.published)}">${human(g.published)}</time>${g.updated ? ` · Updated <time datetime="${iso(g.updated)}">${human(g.updated)}</time>` : ''}</p>
 <article class="prose">${g.html}</article>
-<aside class="box"><h2>Run the numbers</h2><p>See what's left after licensing, the register, voids and EPC C by 2030.</p><a class="btn" href="/check">Check a deal</a></aside>`;
+${g.cta === 'provider'
+  ? `<aside class="box"><h2>Offered a provider lease?</h2><p>Run the free 12-question check, or have us review the provider for you before you sign.</p><a class="btn" href="/provider-check">Free provider check</a> <a class="btn" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.7);margin-left:6px" href="/provider-review">Provider review</a></aside>`
+  : `<aside class="box"><h2>Run the numbers</h2><p>See what's left after licensing, the register, voids and EPC C by 2030.</p><a class="btn" href="/check">Check a deal</a></aside>`}
+${leadForm(g.slug)}
+<script>${FORM_JS}</script>`;
   const jsonld = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -129,7 +180,9 @@ const index = `
 <ul class="list">${guides
   .map((g) => `<li><a href="/guides/${g.slug}"><time datetime="${iso(g.published)}">${human(g.published)}</time><strong>${esc(g.title)}</strong><span>${esc(g.description)}</span></a></li>`)
   .join('')}</ul>
-<aside class="box"><h2>Check a deal</h2><p>Compare HMO, serviced accommodation and a provider lease on compliant profit.</p><a class="btn" href="/check">Open the deal check</a></aside>`;
+<aside class="box"><h2>Check a deal</h2><p>Compare HMO, serviced accommodation and a provider lease on compliant profit.</p><a class="btn" href="/check">Open the deal check</a></aside>
+${leadForm('guides-index')}
+<script>${FORM_JS}</script>`;
 writeFileSync(join(OUT, 'index.html'), page({ title: 'HMO guides for UK landlords | HMO Profit', description: 'Plain-English guides on the costs and rules that decide whether an HMO pays. Every fact is sourced.', canonical: `${SITE}/guides/`, body: index }));
 
 const urls = ['/', '/check', '/provider-check', '/provider-review', '/provider-review/documents', '/guides/', ...guides.map((g) => `/guides/${g.slug}`), '/privacy-policy', '/terms'];
