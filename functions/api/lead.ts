@@ -1,0 +1,75 @@
+/**
+ * Cloudflare Pages Function: POST /api/lead
+ * Adds the contact to Brevo (BREVO_API_KEY, BREVO_LIST_ID) and, if set,
+ * forwards the row to a Google Sheets webhook (SHEETS_WEBHOOK_URL).
+ */
+interface Env {
+  BREVO_API_KEY?: string;
+  BREVO_LIST_ID?: string;
+  SHEETS_WEBHOOK_URL?: string;
+}
+
+interface Body {
+  name?: string;
+  email?: string;
+  phone?: string;
+  consent?: boolean;
+  source?: string;
+  summary?: Record<string, unknown>;
+  company?: string;
+}
+
+const json = (data: unknown, status = 200) =>
+  new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json' } });
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+export const onRequestPost = async ({ request, env }: { request: Request; env: Env }) => {
+  let body: Body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: 'Invalid request.' }, 400);
+  }
+  if (body.company) return json({ ok: true }); // honeypot: pretend success
+  const name = (body.name ?? '').trim().slice(0, 120);
+  const email = (body.email ?? '').trim().toLowerCase().slice(0, 200);
+  const phone = (body.phone ?? '').trim().slice(0, 40);
+  if (!name) return json({ error: 'Please enter your name.' }, 400);
+  if (!EMAIL.test(email)) return json({ error: 'Please enter a valid email address.' }, 400);
+  if (body.consent !== true) return json({ error: 'Please tick the consent box.' }, 400);
+  const source = body.source === 'provider-check' ? 'provider-check' : 'deal-check';
+
+  const tasks: Promise<Response>[] = [];
+  if (env.BREVO_API_KEY) {
+    const [first, ...rest] = name.split(/\s+/);
+    tasks.push(
+      fetch('https://api.brevo.com/v3/contacts', {
+        method: 'POST',
+        headers: { 'api-key': env.BREVO_API_KEY, 'content-type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify({
+          email,
+          updateEnabled: true,
+          attributes: { FIRSTNAME: first, LASTNAME: rest.join(' '), SOURCE: `hmoprofit-${source}` },
+          listIds: env.BREVO_LIST_ID ? [Number(env.BREVO_LIST_ID)] : undefined,
+        }),
+      }),
+    );
+  }
+  if (env.SHEETS_WEBHOOK_URL) {
+    tasks.push(
+      fetch(env.SHEETS_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ at: new Date().toISOString(), name, email, phone, source, ...(body.summary ?? {}) }),
+      }),
+    );
+  }
+
+  const results = await Promise.allSettled(tasks);
+  const failed = results.filter((r) => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.ok && r.value.status !== 204));
+  if (tasks.length > 0 && failed.length === tasks.length) {
+    return json({ error: 'We could not save your details just now. Please try again.' }, 502);
+  }
+  return json({ ok: true });
+};

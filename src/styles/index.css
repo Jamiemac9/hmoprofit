@@ -1,0 +1,205 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+
+/*
+  Palette referenced from DeepBook (deepbook-v2-wip.webflow.io):
+  black ground, white type, one electric blue, slate grey, warm off-white.
+*/
+@theme {
+  --color-ink: #000000;
+  --color-panel: #121416;
+  --color-panel-2: #1b1e21;
+  --color-rule: #2a2f34;
+  --color-slate: #6a7681;
+  --color-mist: #8f99a3; /* slate lifted for small text on black: 6.9:1 */
+  --color-stone: #efefeb;
+  --color-paper: #ffffff;
+  --color-signal: #1e6ef3;
+  --color-signal-deep: #1557c7;
+  --color-warn: #f2c230;
+  --color-risk: #ff7a45;
+  --color-ok: #3ccf8e;
+
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  html {
+    background: var(--color-ink);
+    color: var(--color-paper);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+  body {
+    font-family: var(--font-sans);
+    font-feature-settings: 'ss01', 'tnum' 0;
+  }
+  ::selection {
+    background: var(--color-signal);
+    color: #fff;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 3px;
+  }
+  input,
+  select,
+  button,
+  textarea {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .wrap {
+    width: 100%;
+    max-width: 1320px;
+    margin-inline: auto;
+    padding-inline: clamp(20px, 4vw, 40px);
+  }
+  .display {
+    font-weight: 560;
+    letter-spacing: -0.035em;
+    line-height: 0.98;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.035em;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 0 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 15px;
+    transition:
+      background-color 0.25s var(--ease-out-expo),
+      color 0.25s var(--ease-out-expo),
+      transform 0.25s var(--ease-out-expo);
+    cursor: pointer;
+  }
+  .btn:active {
+    transform: scale(0.98);
+  }
+  .btn-signal {
+    background: var(--color-signal);
+    color: #fff;
+  }
+  .btn-signal:hover {
+    background: var(--color-signal-deep);
+  }
+  .btn-light {
+    background: #fff;
+    color: #000;
+  }
+  .btn-light:hover {
+    background: var(--color-stone);
+  }
+  .btn-ghost {
+    border: 1px solid rgb(255 255 255 / 0.28);
+    color: #fff;
+  }
+  .btn-ghost:hover {
+    border-color: #fff;
+  }
+  /* Corner ticks used on panels, after the DeepBook "+" frame marks */
+  .ticks {
+    position: relative;
+  }
+  .ticks::before,
+  .ticks::after {
+    content: '+';
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1;
+    color: currentColor;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .ticks::before {
+    top: 12px;
+    left: 12px;
+  }
+  .ticks::after {
+    bottom: 12px;
+    right: 12px;
+  }
+  .dot-grid {
+    background-image: radial-gradient(rgb(255 255 255 / 0.28) 1px, transparent 1.2px);
+    background-size: 36px 36px;
+  }
+  .field {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 14px;
+    border-radius: 6px;
+    background: var(--color-panel-2);
+    border: 1px solid var(--color-rule);
+    color: #fff;
+    transition: border-color 0.2s;
+  }
+  .field:hover {
+    border-color: var(--color-slate);
+  }
+  .field:focus {
+    border-color: var(--color-signal);
+    outline: none;
+  }
+}
+
+/* Split-text line masks */
+.split-line {
+  overflow: hidden;
+  padding-bottom: 0.06em;
+  margin-bottom: -0.06em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-plain {
+    background: #fff !important;
+    color: #000 !important;
+    border-color: #ccc !important;
+  }
+}
