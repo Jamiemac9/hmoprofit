@@ -14,6 +14,11 @@ describe('POST /api/lead', () => {
     expect(res.status).toBe(400);
   });
 
+  it('refuses with 503 when there is nowhere to save the lead', async () => {
+    const res = await onRequestPost({ request: req(good), env: {} });
+    expect(res.status).toBe(503);
+  });
+
   it('requires consent', async () => {
     const res = await onRequestPost({ request: req({ ...good, consent: false }), env: {} });
     expect(res.status).toBe(400);

@@ -60,6 +60,12 @@ export async function handleLead(request: Request, env: Env): Promise<Response> 
   const SOURCES = ['deal-check', 'provider-check', 'provider-review'];
   const source = SOURCES.includes(body.source ?? '') ? (body.source as string) : 'deal-check';
 
+  // Never accept a lead with nowhere to put it: fail loudly so the visitor can email instead.
+  if (!env.BREVO_API_KEY && !env.SHEETS_WEBHOOK_URL) {
+    console.error('lead: no BREVO_API_KEY or SHEETS_WEBHOOK_URL set; lead not saved');
+    return json({ error: 'Our form is not taking submissions right now. Please email info@hmoprofit.co.uk.' }, 503);
+  }
+
   const tasks: Promise<Response>[] = [];
   if (env.BREVO_API_KEY) {
     const [first, ...rest] = name.split(/\s+/);
