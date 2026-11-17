@@ -1,9 +1,11 @@
 /**
- * Cloudflare Pages Function: POST /api/lead
- * Adds the contact to Brevo (BREVO_API_KEY, BREVO_LIST_ID) and, if set,
- * forwards the row to a Google Sheets webhook (SHEETS_WEBHOOK_URL).
+ * Lead handler behind POST /api/lead. Host-neutral: takes a web Request and an env object.
+ * Netlify wiring: netlify/functions/lead.mts.
+ *
+ * Adds the contact to Brevo (BREVO_API_KEY, BREVO_LIST_ID), emails provider review requests
+ * to NOTIFY_EMAIL, and, if set, forwards the row to a Google Sheets webhook (SHEETS_WEBHOOK_URL).
  */
-interface Env {
+export interface Env {
   BREVO_API_KEY?: string;
   BREVO_LIST_ID?: string;
   SHEETS_WEBHOOK_URL?: string;
@@ -38,7 +40,8 @@ function ukE164(raw: string): string | null {
   return m ? `+44${m[1]}` : null;
 }
 
-export const onRequestPost = async ({ request, env }: { request: Request; env: Env }) => {
+export async function handleLead(request: Request, env: Env): Promise<Response> {
+  if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405);
   let body: Body;
   try {
     body = await request.json();
@@ -71,12 +74,20 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
           listIds: env.BREVO_LIST_ID ? [Number(env.BREVO_LIST_ID)] : undefined,
         }),
       });
-    // Full attributes first. If the account lacks the custom ones (ROLE, SOURCE) or rejects the
-    // number as SMS, Brevo answers 400, so retry with the built-in name fields only.
+    // Full attributes first. If Brevo rejects one (a missing custom field, or a phone number
+    // already on another contact), retry without the phone, then with the name only.
+    const base = { FIRSTNAME: first, LASTNAME: rest.join(' ') };
+    const attempts = [
+      { ...base, SMS: phone, ROLE: role, SOURCE: `hmoprofit-${source}` },
+      { ...base, ROLE: role, SOURCE: `hmoprofit-${source}` },
+      base,
+    ];
     tasks.push(
-      send({ FIRSTNAME: first, LASTNAME: rest.join(' '), SMS: phone, ROLE: role, SOURCE: `hmoprofit-${source}` }).then((r) =>
-        r.status === 400 ? send({ FIRSTNAME: first, LASTNAME: rest.join(' ') }) : r,
-      ),
+      (async () => {
+        let res = await send(attempts[0]);
+        for (let n = 1; n < attempts.length && res.status === 400; n++) res = await send(attempts[n]);
+        return res;
+      })(),
     );
   }
   if (env.SHEETS_WEBHOOK_URL) {
@@ -114,4 +125,4 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
     return json({ error: 'We could not save your details just now. Please try again.' }, 502);
   }
   return json({ ok: true });
-};
+}

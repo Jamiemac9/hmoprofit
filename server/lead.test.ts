@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { onRequestPost } from './lead';
+import { handleLead } from './lead';
+
+const onRequestPost = ({ request, env }: { request: Request; env: Record<string, string> }) => handleLead(request, env);
 
 const req = (body: unknown) => new Request('https://x/api/lead', { method: 'POST', body: JSON.stringify(body) });
 const good = { name: 'Sam Patel', email: 'sam@example.com', phone: '07700 900123', role: 'landlord', consent: true, source: 'deal-check' };
@@ -26,15 +28,22 @@ describe('POST /api/lead', () => {
     expect(sent.listIds).toEqual([7]);
   });
 
-  it('retries with name only when Brevo rejects the attributes', async () => {
+  it('retries without the phone, then name only, when Brevo rejects attributes', async () => {
     const fetchMock = vi
       .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response('{}', { status: 400 }))
       .mockResolvedValueOnce(new Response('{}', { status: 400 }))
       .mockResolvedValueOnce(new Response(null, { status: 201 }));
     const res = await onRequestPost({ request: req(good), env: { BREVO_API_KEY: 'k' } });
     expect(res.status).toBe(200);
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(JSON.parse(String(fetchMock.mock.calls[1][1]?.body)).attributes).toEqual({ FIRSTNAME: 'Sam', LASTNAME: 'Patel' });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(JSON.parse(String(fetchMock.mock.calls[1][1]?.body)).attributes.SMS).toBeUndefined();
+    expect(JSON.parse(String(fetchMock.mock.calls[2][1]?.body)).attributes).toEqual({ FIRSTNAME: 'Sam', LASTNAME: 'Patel' });
+  });
+
+  it('rejects anything but POST', async () => {
+    const res = await handleLead(new Request('https://x/api/lead'), {});
+    expect(res.status).toBe(405);
   });
 
   it('accepts +44 numbers and passes them to the Sheets webhook', async () => {

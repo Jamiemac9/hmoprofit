@@ -8,7 +8,7 @@ Compliance-adjusted profit for UK property. A deal check that compares a profess
 - GSAP (ScrollTrigger, SplitText, CustomEase) and Lenis for scroll and motion
 - Geist / Geist Mono, self-hosted via Fontsource
 - Static guides built from Markdown (`content/guides/*.md`) into crawlable HTML
-- One Cloudflare Pages Function, `functions/api/lead.ts`, for lead capture (Brevo + optional Google Sheets webhook)
+- One Netlify Function at `/api/lead` (`netlify/functions/lead.mts` → `server/lead.ts`) for lead capture: Brevo contacts, provider review emails, optional Google Sheets webhook
 
 Visual direction references DeepBook (black ground, electric blue `#1E6EF3`, slate `#6A7681`, off-white `#EFEFEB`, pinned split-panel scroll story, tick-field hero canvas, oversized footer wordmark). All motion respects `prefers-reduced-motion`.
 
@@ -21,16 +21,27 @@ npm test           # calculator maths
 npm run build      # app + static guides + sitemap into dist/
 ```
 
-## Deploy (Cloudflare Pages)
+## Deploy (Netlify)
 
-1. Cloudflare dashboard → Workers & Pages → Create → Pages → connect `Jamiemac9/hmoprofit`.
-2. Build command `npm run build`, output directory `dist`. The `functions/` folder is picked up automatically.
-3. Environment variables (Production):
-   - `BREVO_API_KEY`, `BREVO_LIST_ID` – where leads go
-   - `SHEETS_WEBHOOK_URL` – optional, e.g. a Google Apps Script web app that appends a row
-   - `NOTIFY_EMAIL`, `BREVO_SENDER_EMAIL` – provider review requests are emailed here from a sender verified in Brevo
-4. In Brevo, add two text contact attributes, `ROLE` and `SOURCE`. Without them the lead is still saved, but with name only (phone and role still reach the Sheets webhook).
-5. Add the custom domain `hmoprofit.co.uk` in Pages and switch DNS from the old host once you're happy.
+Hosted on Netlify alongside the other APX sites. `netlify.toml` sets the build (`npm run build` → `dist`), Node 22, headers and the function.
+
+Environment variables (Netlify → Project configuration → Environment variables, scope must include **Functions**):
+
+| Variable | Value | Secret |
+| --- | --- | --- |
+| `BREVO_API_KEY` | A Brevo API key (SMTP & API → API keys) | Yes |
+| `BREVO_LIST_ID` | ID of the "HMO Profit leads" list | No |
+| `NOTIFY_EMAIL` | `info@hmoprofit.co.uk` (where provider review requests go) | No |
+| `BREVO_SENDER_EMAIL` | `info@hmoprofit.co.uk` (domain is authenticated in Brevo) | No |
+| `SHEETS_WEBHOOK_URL` | Optional: Google Apps Script web app URL | No |
+
+Brevo needs the contact fields `ROLE` and `SOURCE` (text). If either is missing, or a phone number already belongs to another contact, the function retries without the phone, then with name only, so a lead is never lost.
+
+Change an env var → redeploy for functions to pick it up.
+
+### Domain
+
+DNS for hmoprofit.co.uk is at Namecheap. In Netlify → Domain management add `hmoprofit.co.uk`, then at Namecheap point the apex `A` record to Netlify's load balancer and `www` `CNAME` to the Netlify subdomain, as Netlify shows. Keep Brevo's DKIM/SPF/DMARC records untouched.
 
 ## Where things live
 

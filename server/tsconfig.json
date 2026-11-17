@@ -6,7 +6,8 @@
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "types": ["@cloudflare/workers-types"]
+    "allowImportingTsExtensions": false,
+    "types": ["@netlify/functions"]
   },
-  "include": ["."]
+  "include": [".", "../netlify/functions"]
 }
