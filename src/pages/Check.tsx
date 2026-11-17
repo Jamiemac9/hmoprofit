@@ -1,10 +1,12 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { NumberField, Segmented, SelectField, StatusBadge } from '../components/Form';
-import { calcAll, DEFAULT_INPUTS, gbp, monthlyMortgage, type EpcBand, type Inputs, type Result, type Strategy } from '../lib/calc';
+import { calcAll, DEFAULT_INPUTS, gbp, monthlyMortgage, type EpcBand, type Inputs, type Strategy } from '../lib/calc';
 import { gsap, prefersReducedMotion } from '../lib/motion';
-import { REPORT_PRICE, stripeUrl, submitLead } from '../lib/lead';
-import { readFlag, setFlag, useStored } from '../lib/store';
+import { readProfile, type LeadProfile } from '../lib/lead';
+import LeadForm from '../components/LeadForm';
+import { nextSteps } from '../lib/network';
+import { useStored } from '../lib/store';
 import { usePageMeta } from '../lib/meta';
 
 const STEPS = ['Property', 'Income', 'Compliance', 'Result'] as const;
@@ -164,92 +166,11 @@ function Bar({ value, max }: { value: number; max: number }) {
   );
 }
 
-function LeadGate({ onUnlocked, results }: { onUnlocked: (email: string) => void; results: Record<Strategy, Result> }) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const submit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const email = String(f.get('email') ?? '');
-    setBusy(true);
-    setError(null);
-    const res = await submitLead({
-      name: String(f.get('name') ?? ''),
-      email,
-      phone: String(f.get('phone') ?? ''),
-      consent: f.get('consent') === 'on',
-      company: String(f.get('company') ?? ''),
-      source: 'deal-check',
-      summary: {
-        hmo_compliant: results.hmo.compliant,
-        sa_compliant: results.sa.compliant,
-        sh_compliant: results.sh.compliant,
-      },
-    });
-    setBusy(false);
-    if (res.ok) onUnlocked(email);
-    else setError(res.error ?? 'Something went wrong.');
-  };
-  return (
-    <form onSubmit={submit} className="rounded-[8px] border border-white/15 bg-[#0b0c0d]/95 p-6 shadow-2xl backdrop-blur sm:p-8">
-      <h3 className="text-[22px] font-medium tracking-tight">See the line-by-line breakdown</h3>
-      <p className="mt-1 text-[14px] leading-relaxed text-white/75">Every cost, its basis, and your compliance checklist for all three strategies. Free.</p>
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="lead-name" className="mb-2 block text-[14px] font-medium">Name</label>
-          <input id="lead-name" name="name" required autoComplete="name" className="field" />
-        </div>
-        <div>
-          <label htmlFor="lead-email" className="mb-2 block text-[14px] font-medium">Email</label>
-          <input id="lead-email" name="email" type="email" required autoComplete="email" className="field" />
-        </div>
-        <div className="sm:col-span-2">
-          <label htmlFor="lead-phone" className="mb-2 block text-[14px] font-medium">Phone <span className="text-mist">(optional)</span></label>
-          <input id="lead-phone" name="phone" type="tel" autoComplete="tel" className="field" />
-        </div>
-        <div className="hidden" aria-hidden="true">
-          <label htmlFor="lead-company">Company</label>
-          <input id="lead-company" name="company" tabIndex={-1} autoComplete="off" />
-        </div>
-        <label className="flex items-start gap-3 text-[13px] leading-relaxed text-white/80 sm:col-span-2">
-          <input type="checkbox" name="consent" required className="mt-1 h-4 w-4 accent-[#1E6EF3]" />
-          <span>
-            Email me my results and related property updates. Unsubscribe any time. See the{' '}
-            <Link to="/privacy-policy" className="underline">privacy policy</Link>.
-          </span>
-        </label>
-      </div>
-      {error && <p role="alert" className="mt-4 text-[14px] text-risk">{error}</p>}
-      <button type="submit" disabled={busy} className="btn btn-signal mt-5 w-full disabled:opacity-60">
-        {busy ? 'Unlocking…' : 'Unlock the breakdown'}
-      </button>
-    </form>
-  );
-}
-
-function nextSteps(i: Inputs, s: Strategy) {
-  const out: { tag: string; title: string; text: string; href: string; internal?: boolean }[] = [];
-  if (s === 'sh') {
-    out.push(
-      { tag: 'Before you sign', title: 'Run the provider lease check', text: 'Twelve questions to put to any supported housing provider.', href: '/provider-check', internal: true },
-      { tag: 'For the provider', title: 'Support Audit', text: 'Point them here to evidence their support before licensing arrives.', href: 'https://supportaudit.co.uk' },
-      { tag: 'Guides', title: 'Exempt Accommodation', text: 'How exempt rent and provider leases work.', href: 'https://exemptaccommodation.com' },
-    );
-  }
-  if (s !== 'sa' && ['D', 'E', 'F', 'G', 'unknown'].includes(i.epcBand) && i.tenure === 'own') {
-    out.push({ tag: 'EPC below C', title: 'Get a current EPC', text: 'Know the real upgrade bill before you commit.', href: 'https://epcbirmingham.co.uk' });
-  }
-  if (s !== 'sa') {
-    out.push({ tag: 'Guide', title: 'The landlord register', text: 'What it costs an HMO, and the deadline for your region.', href: '/guides/register-your-rental-property-hmo' });
-  }
-  return out;
-}
-
 function ResultView({ i, onEdit }: { i: Inputs; onEdit: () => void }) {
   const results = useMemo(() => calcAll(i), [i]);
   const [tab, setTab] = useState<Strategy>('hmo');
-  const [unlocked, setUnlocked] = useState(() => readFlag('hp-lead'));
-  const [email, setEmail] = useState<string | undefined>();
+  const [profile, setProfile] = useState<LeadProfile | null>(() => readProfile());
+  const unlocked = profile !== null;
   const r = results[tab];
   const max = Math.max(...Object.values(results).map((x) => x.headline), 1);
   const ref = useRef<HTMLDivElement>(null);
@@ -262,7 +183,6 @@ function ResultView({ i, onEdit }: { i: Inputs; onEdit: () => void }) {
     return () => ctx.revert();
   }, [tab]);
 
-  const pay = stripeUrl(email);
   const summary =
     i.tenure === 'own'
       ? `${i.bedrooms}-bed · ${gbp(i.purchasePrice)} · ${((i.deposit / Math.max(1, i.purchasePrice)) * 100).toFixed(0)}% deposit · ${i.ratePct}% ${i.mortgageType === 'io' ? 'interest-only' : 'repayment'}`
@@ -363,13 +283,22 @@ function ResultView({ i, onEdit }: { i: Inputs; onEdit: () => void }) {
           {!unlocked && (
             <div className="absolute inset-0 flex items-start justify-center p-3 pt-10 sm:p-8">
               <div className="w-full max-w-[520px]">
-                <LeadGate
-                  results={results}
-                  onUnlocked={(e) => {
-                    setFlag('hp-lead');
-                    setEmail(e);
-                    setUnlocked(true);
+                <LeadForm
+                  source="deal-check"
+                  title="Get your full report, free"
+                  text="The line-by-line breakdown, your compliance checklist and a printable report for all three strategies. No payment."
+                  button="Get my full report"
+                  busyLabel="Opening your report…"
+                  summary={{
+                    tenure: i.tenure,
+                    bedrooms: i.bedrooms,
+                    price: i.tenure === 'own' ? i.purchasePrice : 0,
+                    epc: i.epcBand,
+                    hmo_compliant: results.hmo.compliant,
+                    sa_compliant: results.sa.compliant,
+                    sh_compliant: results.sh.compliant,
                   }}
+                  onDone={setProfile}
                 />
               </div>
             </div>
@@ -380,7 +309,7 @@ function ResultView({ i, onEdit }: { i: Inputs; onEdit: () => void }) {
           <div className="ticks rounded-[8px] bg-signal p-6 text-white" data-in>
             <h2 className="text-[22px] font-medium tracking-tight">What to do next</h2>
             <div className="mt-4 grid gap-2.5">
-              {nextSteps(i, tab).map((n) => {
+              {nextSteps(i, tab, profile?.role).map((n) => {
                 const inner = (
                   <>
                     <span className="eyebrow !text-[10px] text-black/60">{n.tag}</span>
@@ -398,16 +327,15 @@ function ResultView({ i, onEdit }: { i: Inputs; onEdit: () => void }) {
             </div>
           </div>
           <div className="rounded-[8px] border border-rule bg-panel p-6" data-in>
-            <h2 className="text-[20px] font-medium tracking-tight">Full report · {REPORT_PRICE}</h2>
+            <h2 className="text-[20px] font-medium tracking-tight">Your full report</h2>
             <p className="mt-2 text-[14px] leading-relaxed text-white/75">
-              All three strategies on one printable page, every assumption listed, ready for your broker or investor.
+              All three strategies on one printable page, every assumption listed, ready for your broker or investor. Free.
             </p>
-            {pay ? (
-              <a href={pay} className="btn btn-light mt-5 w-full">Get the full report</a>
+            {unlocked ? (
+              <Link to="/report" className="btn btn-light mt-5 w-full">Open my full report</Link>
             ) : (
-              <Link to="/report" className="btn btn-light mt-5 w-full">Get the full report</Link>
+              <p className="mt-4 text-[13px] text-mist">Fill in your details to open it.</p>
             )}
-            <p className="mt-3 text-[12px] text-mist">Secure payment by Stripe.</p>
           </div>
         </aside>
       </div>

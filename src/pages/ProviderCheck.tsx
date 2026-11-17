@@ -1,6 +1,9 @@
-import { useLayoutEffect, useMemo, useRef } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStored } from '../lib/store';
+import LeadForm from '../components/LeadForm';
+import { readProfile, type LeadProfile } from '../lib/lead';
+import { SITES } from '../lib/network';
 import { setupReveals } from '../lib/motion';
 import { usePageMeta } from '../lib/meta';
 
@@ -50,6 +53,7 @@ export default function ProviderCheck() {
     'Offered a lease by a supported housing provider? Twelve questions to ask before you sign, with a scorecard you can take to your solicitor.',
   );
   const [answers, setAnswers] = useStored<Record<string, Answer>>('hp-provider', {});
+  const [profile, setProfile] = useState<LeadProfile | null>(() => readProfile());
   const ref = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => (ref.current ? setupReveals(ref.current) : undefined), []);
 
@@ -144,13 +148,32 @@ export default function ProviderCheck() {
               </ul>
             </div>
           )}
+          <div className="mt-4">
+            {profile ? (
+              <p className="rounded-[8px] border border-rule bg-panel p-5 text-[14px] leading-relaxed text-white/80">
+                Thanks{profile.name ? `, ${profile.name.split(' ')[0]}` : ''}. We'll send supported housing licensing updates as the
+                rules firm up. Print the scorecard below to take to your solicitor.
+              </p>
+            ) : (
+              answered >= 6 && (
+                <LeadForm
+                  source="provider-check"
+                  title="Stay ahead of licensing"
+                  text="Get supported housing licensing updates as the regulations firm up, and a call if you'd like a second pair of eyes on this provider."
+                  button="Send me updates"
+                  summary={{ provider_score: score, provider_answered: answered, provider_gaps: gaps.map((g) => g.id).join(' ') }}
+                  onDone={setProfile}
+                />
+              )
+            )}
+          </div>
           <div className="mt-4 grid gap-3">
-            <a href="https://supportaudit.co.uk" className="ticks block rounded-[8px] bg-signal p-6 text-white transition-transform hover:-translate-y-0.5">
+            <a href={SITES.supportAudit.href} className="ticks block rounded-[8px] bg-signal p-6 text-white transition-transform hover:-translate-y-0.5">
               <span className="eyebrow text-white/80">If you're the provider</span>
               <span className="mt-2 block text-[24px] font-medium tracking-tight">Support Audit</span>
               <span className="mt-1 block text-[14px] leading-relaxed text-white/90">An independent check that your property and support evidence stands up.</span>
             </a>
-            <a href="https://exemptaccommodation.com" className="block rounded-[8px] border border-rule bg-panel p-6 transition-colors hover:border-white">
+            <a href={SITES.exempt.href} className="block rounded-[8px] border border-rule bg-panel p-6 transition-colors hover:border-white">
               <span className="eyebrow text-mist">If you're the owner</span>
               <span className="mt-2 block text-[24px] font-medium tracking-tight">Exempt Accommodation</span>
               <span className="mt-1 block text-[14px] leading-relaxed text-white/75">Guides to exempt rent, provider leases and licensing.</span>

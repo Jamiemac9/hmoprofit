@@ -26,11 +26,9 @@ npm run build      # app + static guides + sitemap into dist/
 1. Cloudflare dashboard → Workers & Pages → Create → Pages → connect `Jamiemac9/hmoprofit`.
 2. Build command `npm run build`, output directory `dist`. The `functions/` folder is picked up automatically.
 3. Environment variables (Production):
-   - `VITE_STRIPE_PAYMENT_LINK` – your Stripe Payment Link for the £9 report
-   - `VITE_REPORT_PRICE` – e.g. `£9`
    - `BREVO_API_KEY`, `BREVO_LIST_ID` – where leads go
    - `SHEETS_WEBHOOK_URL` – optional, e.g. a Google Apps Script web app that appends a row
-4. In Stripe, set the Payment Link's confirmation page to redirect to `https://hmoprofit.co.uk/report?paid=1`.
+4. In Brevo, add two text contact attributes, `ROLE` and `SOURCE`. Without them the lead is still saved, but with name only (phone and role still reach the Sheets webhook).
 5. Add the custom domain `hmoprofit.co.uk` in Pages and switch DNS from the old host once you're happy.
 
 ## Where things live
@@ -42,7 +40,9 @@ npm run build      # app + static guides + sitemap into dist/
 | `src/pages/Home.tsx` | Homepage sections and copy |
 | `src/pages/Check.tsx` | The four-step deal check and result screen |
 | `src/pages/ProviderCheck.tsx` | The 12-question provider lease scorecard |
-| `src/pages/Report.tsx` | Paid full report (print / save as PDF) |
+| `src/pages/Report.tsx` | Free full report (print / save as PDF), opened by lead capture |
+| `src/components/LeadForm.tsx` | Name, email, phone, role form used on the deal check and provider check |
+| `src/lib/network.ts` | SEA network links and next-step routing |
 | `src/components/Fields.tsx` | Hero tick field and bar field canvases |
 | `src/components/Iso.tsx` | Isometric line-art illustrations |
 | `content/guides/` | One Markdown file per guide |
@@ -55,6 +55,6 @@ Images go in `public/guides/`. The existing guide expects `public/guides/registe
 
 ## Notes
 
-- The free result shows the three headline figures. The line-by-line breakdown and checklist unlock after name + email (consent required), matching the privacy policy and terms.
-- The paid report unlocks client-side after the Stripe redirect. For server-side verification, swap the Payment Link for Stripe Checkout Sessions in a Pages Function.
+- Everything is free. The three headline figures show straight away; the breakdown, checklist and printable full report open after name, email, UK phone number and role (consent required). Leads are tagged `deal-check` or `provider-check` with a results summary.
+- The full report and the result screen route people into the SEA network (Support Audit, Exempt Accommodation, EPC Birmingham) based on their figures and role. Links live in `src/lib/network.ts`.
 - Figures are illustrative and the rules modelled are for England.

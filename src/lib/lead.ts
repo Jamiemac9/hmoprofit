@@ -1,12 +1,26 @@
+export type Role = 'investor' | 'landlord' | 'provider' | 'sourcer' | 'other';
+
+export const ROLES: { value: Role; label: string }[] = [
+  { value: 'investor', label: 'Buying my next property' },
+  { value: 'landlord', label: 'Landlord with properties now' },
+  { value: 'provider', label: 'Supported housing provider' },
+  { value: 'sourcer', label: 'Deal sourcer or agent' },
+  { value: 'other', label: 'Something else' },
+];
+
 export interface LeadPayload {
   name: string;
   email: string;
-  phone?: string;
+  phone: string;
+  role: Role;
   consent: boolean;
   source: 'deal-check' | 'provider-check';
   summary?: Record<string, string | number>;
   company?: string; // honeypot
 }
+
+/** UK mobile or landline: 07…, 01…, 02…, 03…, or +44 equivalents. Spaces and dashes allowed. */
+export const UK_PHONE = /^(?:\+44\s?|0)(?:\d\s?-?){9,10}$/;
 
 /** Sends a lead to the Pages Function at /api/lead (Brevo + optional Google Sheets webhook). */
 export async function submitLead(payload: LeadPayload): Promise<{ ok: boolean; error?: string }> {
@@ -26,12 +40,25 @@ export async function submitLead(payload: LeadPayload): Promise<{ ok: boolean; e
   }
 }
 
-export const REPORT_PRICE = import.meta.env.VITE_REPORT_PRICE || '£9';
-export const STRIPE_LINK: string | undefined = import.meta.env.VITE_STRIPE_PAYMENT_LINK || undefined;
+export interface LeadProfile {
+  name: string;
+  role: Role;
+}
 
-export function stripeUrl(email?: string) {
-  if (!STRIPE_LINK) return undefined;
-  const u = new URL(STRIPE_LINK);
-  if (email) u.searchParams.set('prefilled_email', email);
-  return u.toString();
+export function saveProfile(p: LeadProfile) {
+  try {
+    localStorage.setItem('hp-lead', '1');
+    localStorage.setItem('hp-profile', JSON.stringify(p));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export function readProfile(): LeadProfile | null {
+  try {
+    if (localStorage.getItem('hp-lead') !== '1') return null;
+    return JSON.parse(localStorage.getItem('hp-profile') ?? 'null') ?? { name: '', role: 'other' };
+  } catch {
+    return null;
+  }
 }

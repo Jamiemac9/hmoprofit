@@ -1,35 +1,24 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { StatusBadge } from '../components/Form';
 import { calcAll, DEFAULT_INPUTS, gbp, RULES, type Inputs, type Strategy } from '../lib/calc';
-import { REPORT_PRICE, stripeUrl } from '../lib/lead';
-import { readFlag, setFlag, useStored } from '../lib/store';
+import { readProfile } from '../lib/lead';
+import { nextSteps } from '../lib/network';
+import { useStored } from '../lib/store';
 import { usePageMeta } from '../lib/meta';
 
-/**
- * Full report. Stripe's Payment Link should redirect to /report?paid=1 after payment.
- * Unlock is client-side, which matches a low-price digital report; move the check to a
- * Pages Function with Stripe Checkout Sessions if you need server-side verification.
- */
+/** Full report: free once the person has left their details on the deal check. */
 export default function Report() {
   usePageMeta('Full viability report | HMO Profit', 'Your full compliance-adjusted viability report across HMO, serviced accommodation and a provider lease.');
-  const [params] = useSearchParams();
   const [inputs] = useStored<Inputs>('hp-inputs', DEFAULT_INPUTS);
-  const [paid, setPaid] = useState(() => readFlag('hp-paid'));
-  useEffect(() => {
-    if (params.get('paid') === '1') {
-      setFlag('hp-paid');
-      setPaid(true);
-    }
-  }, [params]);
+  const profile = readProfile();
   const results = useMemo(() => calcAll(inputs), [inputs]);
   const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
-  if (!paid) {
-    const pay = stripeUrl();
+  if (!profile) {
     return (
       <div className="wrap max-w-[760px] pt-20 pb-32">
-        <p className="eyebrow text-mist">Full report · {REPORT_PRICE}</p>
+        <p className="eyebrow text-mist">Full report · free</p>
         <h1 className="display mt-3 text-[clamp(40px,6vw,72px)]">One page your broker can check line by line</h1>
         <ul className="mt-8 space-y-3 text-[16px] text-white/85">
           {['All three strategies side by side', 'Every cost with its basis', 'The full compliance checklist', 'Stress test on rate or rent', 'Printable, or save as PDF'].map((x) => (
@@ -37,16 +26,17 @@ export default function Report() {
           ))}
         </ul>
         <div className="mt-10 flex flex-wrap gap-3">
-          {pay ? (
-            <a href={pay} className="btn btn-signal">Pay {REPORT_PRICE} with Stripe</a>
-          ) : (
-            <p className="rounded-[6px] border border-rule px-4 py-3 text-[14px] text-mist">Payments are being set up. Email info@hmoprofit.co.uk for a copy.</p>
-          )}
-          <Link to="/check?step=result" className="btn btn-ghost">Back to my result</Link>
+          <Link to="/check?step=result" className="btn btn-signal">Run the deal check</Link>
         </div>
+        <p className="mt-4 text-[14px] text-mist">Leave your name, email and phone number at the result step and the report opens straight away.</p>
       </div>
     );
   }
+
+  const best = (Object.keys(results) as Strategy[]).reduce((a, k) => (results[k].compliant > results[a].compliant ? k : a), 'hmo' as Strategy);
+  const links = [...nextSteps(inputs, 'hmo', profile.role), ...nextSteps(inputs, 'sh', profile.role)].filter(
+    (l, n, all) => all.findIndex((x) => x.title === l.title) === n,
+  );
 
   return (
     <div className="wrap max-w-[980px] pt-14 pb-28">
@@ -62,7 +52,10 @@ export default function Report() {
               {inputs.bedrooms}-bed {inputs.tenure === 'own' ? `at ${gbp(inputs.purchasePrice)}` : `leased at ${gbp(inputs.landlordRent)}/mo`}
             </h1>
           </div>
-          <p className="text-[13px] text-black/60">Prepared {date}</p>
+          <p className="text-right text-[13px] text-black/60">
+            {profile.name ? <>Prepared for {profile.name}<br /></> : null}
+            {date}
+          </p>
         </header>
 
         <table className="mt-8 w-full text-left text-[14px]">
@@ -113,6 +106,27 @@ export default function Report() {
             </section>
           );
         })}
+
+        <section className="mt-12 break-inside-avoid">
+          <h2 className="text-[24px] font-medium tracking-tight">Where to go next</h2>
+          <p className="mt-2 text-[14px] text-black/70">
+            On these figures, {results[best].name.toLowerCase()} leaves the most at {gbp(results[best].compliant)} a month
+            {results[best].flag ? ', but only if the provider stands up' : ''}. These parts of the SEA network deal with what the
+            checks flagged.
+          </p>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+            {links.map((l) => (
+              <li key={l.title}>
+                <a href={l.href} className="block h-full rounded-[6px] border border-black/15 p-4 hover:border-[#1E6EF3]">
+                  <span className="eyebrow !text-[10px] text-black/55">{l.tag}</span>
+                  <span className="mt-1 block font-medium">{l.title}</span>
+                  <span className="mt-0.5 block text-[13px] text-black/70">{l.text}</span>
+                  <span className="mt-1 block text-[12px] text-[#1557C7]">{l.href.startsWith('http') ? l.href.replace('https://', '') : `hmoprofit.co.uk${l.href}`}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
 
         <section className="mt-12 break-inside-avoid border-t border-black pt-6 text-[13px] leading-relaxed text-black/70">
           <h2 className="mb-2 text-[16px] font-medium text-black">Assumptions</h2>
